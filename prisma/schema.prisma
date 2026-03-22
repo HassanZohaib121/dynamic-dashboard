@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ─────────────────────────────────────────────
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  BOOLEAN
+  SELECT
+  MULTI_SELECT
+  JSON
+}
+
+// ─── MODELS ────────────────────────────────────────────
+model Model {
+  id        String   @id @default(cuid())
+  name      String   @unique          // "products" — must be unique for lookups
+  label     String
+  createdAt DateTime @default(now())
+
+  fields  Field[]
+  records Record[]
+
+  @@index([name])
+}
+
+// ─── FIELD DEFINITIONS ─────────────────────────────────
+model Field {
+  id           String    @id @default(cuid())
+  modelId      String
+  name         String
+  label        String
+  type         FieldType
+  required     Boolean   @default(false)
+  unique       Boolean   @default(false)
+  defaultValue String?
+  options      Json?
+  order        Int       @default(0)  // preserves field ordering in UI
+  createdAt    DateTime  @default(now())
+
+  model Model @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, name])
+  @@index([modelId])              // speeds up Field lookups per Model
+}
+
+// ─── RECORDS ───────────────────────────────────────────
+model Record {
+  id        String   @id @default(cuid())
+  modelId   String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  model        Model         @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  recordIndex  RecordIndex[]
+
+  @@index([modelId])
+  @@index([modelId, createdAt])   // supports sorted/paginated queries per model
+}
+
+// ─── RECORD INDEX (for fast filtering) ─────────────────
+model RecordIndex {
+  id        String @id @default(cuid())
+  recordId  String
+  modelId   String                     // denormalized — avoids JOIN through Record
+  fieldName String
+  value     String
+
+  record Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@index([modelId, fieldName, value])  // primary filter path
+  @@index([recordId])                   // fast cleanup on record delete
+}
