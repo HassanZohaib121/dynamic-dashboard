@@ -66,3 +66,12 @@ BETTER_AUTH_URL="https://yourdomain.com"
 * Restart your dev server after changing `.env`
 
 * Do NOT commit your `.env` file
+
+---
+
+## 🔮 Future Updates
+
+* Support for additional database types (e.g. MySQL, MongoDB)
+* Improved database abstraction layer
+* Easier database switching via configuration
+* Cloud database integrations
