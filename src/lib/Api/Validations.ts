@@ -1,12 +1,4 @@
-import { RecordData } from "./Types";
-
-// ─── VALIDATION ────────────────────────────────────────
-export type FieldMeta = { name: string; type: string; required: boolean; unique: boolean };
-
-export interface ValidationResult {
-  ok: boolean;
-  error?: string;
-}
+import { FieldMeta, RecordData, ValidationResult } from "./Types";
 
 export function validateData(data: RecordData, fields: FieldMeta[]): ValidationResult {
   for (const field of fields) {

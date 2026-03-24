@@ -1,10 +1,9 @@
-// components/dashboard/sidebar.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Plus, Database, Circle } from "lucide-react";
+import { Plus, Circle, Menu, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +15,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ModelSummary } from "@/hooks/use-models";
 import { CreateModelDialog } from "./create-model-dialog";
+import { ThemeToggle } from "../theme-toggle";
+import { UserMenu } from "./user-menu";
 
 interface SidebarProps {
   models: ModelSummary[];
@@ -25,27 +27,49 @@ interface SidebarProps {
   onModelCreated: () => void;
 }
 
-export function Sidebar({ models, loading, onModelCreated }: SidebarProps) {
+function NavContent({
+  models,
+  loading,
+  onCreateClick,
+}: {
+  models: ModelSummary[];
+  loading: boolean;
+  onCreateClick: () => void;
+}) {
   const pathname = usePathname();
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <TooltipProvider delayDuration={300}>
-      <aside className="flex flex-col w-[220px] min-h-screen shrink-0 border-r border-border bg-muted/30">
+      <div className="flex flex-col h-full">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-border">
-          <div className="flex items-center justify-center w-6 h-6 rounded bg-foreground">
-            <Database className="w-3.5 h-3.5 text-background" />
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5 px-4 py-4 border-b border-border shrink-0"
+        >
+          <div className="flex items-center justify-center w-6 h-6 rounded">
+            <LayoutGrid className="w-6 h-6" />
           </div>
-          <span className="text-sm font-medium tracking-tight">DataBase</span>
-        </div>
+
+          <span className="text-md font-medium tracking-tight">
+            Dashboard Hub
+          </span>
+        </Link>
 
         {/* Section label */}
-        <p className="px-4 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex justify-start gap-2 text-muted-foreground hover:text-foreground"
+          onClick={onCreateClick}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          New model
+        </Button>
+        <p className="px-4 pt-4 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground shrink-0">
           Models
         </p>
 
-        {/* Nav */}
+        {/* Nav list */}
         <ScrollArea className="flex-1 px-2">
           <nav className="flex flex-col gap-0.5 pb-2">
             {loading ? (
@@ -61,7 +85,8 @@ export function Sidebar({ models, loading, onModelCreated }: SidebarProps) {
             ) : (
               models.map((m) => {
                 const href = `/dashboard/${m.name}`;
-                const active = pathname === href;
+                const active =
+                  pathname === href || pathname.startsWith(`${href}/`);
                 return (
                   <Tooltip key={m.id}>
                     <TooltipTrigger asChild>
@@ -101,19 +126,51 @@ export function Sidebar({ models, loading, onModelCreated }: SidebarProps) {
           </nav>
         </ScrollArea>
 
-        {/* Create button */}
-        <div className="p-2 border-t border-border">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
-            onClick={() => setDialogOpen(true)}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New model
-          </Button>
+        {/* Footer: create button + theme toggle */}
+        <div className="p-2 border-t border-border flex items-center gap-1">
+          <UserMenu />
+          <ThemeToggle />
         </div>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+export function Sidebar({ models, loading, onModelCreated }: SidebarProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  return (
+    <>
+      {/* ── Desktop sidebar ─────────────────────────────── */}
+      <aside className="hidden md:flex flex-col w-55 min-h-screen shrink-0 border-r border-border bg-muted/30">
+        <NavContent
+          models={models}
+          loading={loading}
+          onCreateClick={() => setDialogOpen(true)}
+        />
       </aside>
+
+      {/* ── Mobile: hamburger + sheet ────────────────────── */}
+      <div className="md:hidden fixed top-3 left-3 z-40">
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="w-9 h-9 shadow-sm">
+              <Menu className="w-4 h-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-55">
+            <NavContent
+              models={models}
+              loading={loading}
+              onCreateClick={() => {
+                setSheetOpen(false);
+                setDialogOpen(true);
+              }}
+            />
+          </SheetContent>
+        </Sheet>
+      </div>
 
       <CreateModelDialog
         open={dialogOpen}
@@ -123,6 +180,6 @@ export function Sidebar({ models, loading, onModelCreated }: SidebarProps) {
           onModelCreated();
         }}
       />
-    </TooltipProvider>
+    </>
   );
 }

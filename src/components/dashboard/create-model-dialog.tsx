@@ -1,4 +1,3 @@
-// components/dashboard/create-model-dialog.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,9 +86,13 @@ export function CreateModelDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-100">
         <DialogHeader>
           <DialogTitle>New model</DialogTitle>
+          <DialogDescription>
+            Model name will be used in your API like:
+            <span className="font-mono"> /api/{name || "model"} </span>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4 py-2">
